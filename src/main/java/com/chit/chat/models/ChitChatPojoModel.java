@@ -6,7 +6,7 @@ public class ChitChatPojoModel {
 
     private MessageType type;
     private String content;
-    private String sender;
+    private String user;
 
     public enum MessageType{
         JOIN,
@@ -29,11 +29,11 @@ public class ChitChatPojoModel {
         this.content = content;
     }
 
-    public String getSender ( ) {
-        return sender;
+    public String getUser ( ) {
+        return user;
     }
 
-    public void setSender ( String sender ) {
-        this.sender = sender;
+    public void setUser ( String user ) {
+        this.user = user;
     }
 }
