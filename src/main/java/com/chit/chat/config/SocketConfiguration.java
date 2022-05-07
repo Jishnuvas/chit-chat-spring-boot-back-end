@@ -1,27 +1,40 @@
-package com.chit.chat.config;
+package com.chit.chat.listenerEvents;
 
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
-import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
-import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import com.chit.chat.models.ChitChatPojoModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.messaging.SessionConnectedEvent;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
-import java.util.Collection;
-import java.util.Collections;
 
-@Configuration
-@EnableWebSocketMessageBroker
-public class SocketConfiguration implements WebSocketMessageBrokerConfigurer {
+@Component
+public class SocketEventListener {
+    private static final Logger logger = LoggerFactory.getLogger ( SocketEventListener.class );
 
+    @Autowired
+    private SimpMessageSendingOperations messagingTemplate;
 
-    @Override
-    public void registerStompEndpoints ( StompEndpointRegistry registry ) {
-        registry.addEndpoint ( "/socket" ).setAllowedOrigins( String.valueOf ( Collections.singletonList("*") ) ).withSockJS ();
+    @EventListener
+    public void handleSocketConnectListener ( SessionConnectedEvent event ) {
+        logger.info ( "A new connection request has arrived" );
     }
 
-    @Override
-    public void configureMessageBroker ( org.springframework.messaging.simp.config.MessageBrokerRegistry registry ) {
-        registry.setApplicationDestinationPrefixes ( "/app" );
-        registry.enableSimpleBroker ( "/topic" );
-
+    @EventListener
+    public void handleSocketDisconnectListener ( SessionDisconnectEvent event ) {
+        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap ( event.getMessage () );
+        String username = (String) headerAccessor.getSessionAttributes ().get("username");
+        if(username != null){
+            logger.info ( "User"+username+"Disconnected" );
+            ChitChatPojoModel message = new ChitChatPojoModel ();
+            message.setType ( ChitChatPojoModel.MessageType.LEAVE );
+            message.setUser ( username );
+            messagingTemplate.convertAndSend ( "/topic/group",message );
+        }
     }
 }
+
