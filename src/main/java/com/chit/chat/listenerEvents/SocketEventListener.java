@@ -32,7 +32,7 @@ public class SocketEventListener {
             logger.info ( "User"+username+"Disconnected" );
             ChitChatPojoModel message = new ChitChatPojoModel ();
             message.setType ( ChitChatPojoModel.MessageType.LEAVE );
-            message.setSender ( username );
+            message.setUser ( username );
             messagingTemplate.convertAndSend ( "/topic/group",message );
         }
     }
